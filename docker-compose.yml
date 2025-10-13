@@ -1,4 +1,5 @@
 
+
 services:
   postgres:
     image: postgres:latest
@@ -22,6 +23,3 @@ services:
         limits:
           cpus: '0.50'
           memory: '500M'
-
-volumes:
-  data:

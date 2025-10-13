@@ -1,21 +1,22 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
-	"net/http"
+	"log"
 	"short-url/config"
-	"short-url/internal/auth"
-	"short-url/internal/link"
-	"short-url/internal/user"
-	"short-url/pkg/database"
-	"short-url/pkg/jwt"
 
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 )
 
 func main() {
 	config := config.LoadConfig()
-	db, err := database.Connect(config.Db)
+
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+		"password=%s dbname=%s sslmode=disable",
+		config.Db.Host, config.Db.Port, config.Db.User, config.Db.Password, config.Db.DbName)
+
+	db, err := sql.Open("postgres", psqlInfo)
 
 	if err != nil {
 		panic(err)
@@ -29,40 +30,6 @@ func main() {
 	}
 
 	fmt.Println("Successfully connected!")
-
-	router := http.NewServeMux()
-
-	jwtService := &jwt.JwtService{
-		SecretKey: config.SecretKey,
-	}
-
-	userRepository := &user.UserRepository{
-		Db: db,
-	}
-
-	linkRepository := &link.LinkRepository{
-		Db: db,
-	}
-
-	auth.NewAuthHandler(router, auth.AuthHandlerParams{
-		JwtService:     jwtService,
-		UserRepository: userRepository,
-	})
-
-	link.NewLinkHandler(router, link.LinkHandlerParams{
-		Repository: linkRepository,
-		JwtService: jwtService,
-	})
-
-	server := http.Server{
-		Addr:    ":" + config.AppPort,
-		Handler: router,
-	}
-
-	fmt.Println("Server is listening on port " + config.AppPort)
-
-	
-	if err := server.ListenAndServe(); err != nil {
-		fmt.Println("Server error:", err)
-	}
 }
+
+// api
