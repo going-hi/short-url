@@ -3,16 +3,15 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"short-url/config"
-
-	"github.com/lib/pq"
+	_ "github.com/lib/pq"
 )
 
 func main() {
 	config := config.LoadConfig()
 
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+	// поменять port=%s на %d
+	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		config.Db.Host, config.Db.Port, config.Db.User, config.Db.Password, config.Db.DbName)
 

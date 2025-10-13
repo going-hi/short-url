@@ -1,9 +1,12 @@
 package link
 
+import "time"
+
 type Link struct {
 	Id string
 	Code string
-	View int
+	Clicks int
 	Url string
 	UserId int
+	CreateAt time.Time
 }

@@ -9,6 +9,7 @@ import (
 type Config struct {
 	Db Db
 
+	SecretKey string
 	AppPort string
 }
 
@@ -33,6 +34,7 @@ func LoadConfig() *Config {
 	dbName := os.Getenv("DATABASE_NAME")
 
 	appPort := os.Getenv("PORT")
+	secretKey := os.Getenv("SECRET_KEY_JWT")
 
 	dbConfig := Db{
 		Host:     dbHost,
@@ -45,5 +47,6 @@ func LoadConfig() *Config {
 	return &Config{
 		Db:      dbConfig,
 		AppPort: appPort,
+		SecretKey: secretKey,
 	}
 }

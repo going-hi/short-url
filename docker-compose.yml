@@ -1,4 +1,3 @@
-version: "3.9"
 
 services:
   postgres:
@@ -12,7 +11,7 @@ services:
     ports:
       - "5439:5432"
     volumes:
-      - ./pgdata:/var/lib/postgresql/data
+       - data:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
       interval: 3s
@@ -23,3 +22,6 @@ services:
         limits:
           cpus: '0.50'
           memory: '500M'
+
+volumes:
+  data:
