@@ -2,26 +2,21 @@ package auth
 
 import (
 	"database/sql"
-	"short-url/config"
 	"short-url/internal/user"
-	"time"
-
-	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthRepository struct {
-	db *sql.DB
-	*config.Config
+	Db *sql.DB
 }
 
 func (r *AuthRepository) FindByEmail(email string) (*user.User, error) {
-	user := user.User{}
-	query := `SELECT * FROM users WHERE email=$1`
-	err := r.db.QueryRow(query, email).Scan(
-		&user.Id,
-		&user.Email,
-		&user.Password,
+	u := &user.User{}
+	query := `SELECT id, email, password FROM users WHERE email=$1`
+	err := r.Db.QueryRow(query, email).Scan(
+		u.Id,
+		u.Email,
+		u.Password,
 	)
 
 	if err != nil {
@@ -33,12 +28,25 @@ func (r *AuthRepository) FindByEmail(email string) (*user.User, error) {
 		return nil, err
 	}
 
-	return &user, nil
+	return u, nil
 }
 
+func (r *AuthRepository) Create(email, hashPassword string) (*user.User, error) {
+	query := `INSERT INTO (email, password) VALUES ($1, $2) FROM users RETURNING id, email, password`
 
-func (r *AuthRepository) Create() {
+	u := &user.User{}
 
+	err := r.Db.QueryRow(query, email, hashPassword).Scan(
+		u.Id,
+		u.Email,
+		u.Password,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
 }
 
 // From docs bcrypt
@@ -52,19 +60,4 @@ func (r *AuthRepository) HashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
-func (r *AuthRepository) GenerateJwt(user *user.User) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"email": user.Email,
-		"id":    user.Id,
-		"exp":   time.Now().Add(time.Hour * 24).Unix(),
-	})
 
-
-	tokenString, err := token.SignedString(r.SecretKey)
-
-	if err != nil {
-		return "", err
-	}
-
-	return tokenString, nil
-}
