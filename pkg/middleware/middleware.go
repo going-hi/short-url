@@ -1,19 +1,22 @@
-package auth
+package middleware
 
 import (
 	"context"
 	"fmt"
 	"net/http"
+	"short-url/pkg/jwt"
 	"short-url/pkg/utils"
 	"strings"
 )
 
+type ctxKey string
+
 const (
-	ContextEmailKey string = "ContextEmailKey"
-	ContextIdKey    string = "ContextIdKey"
+	ContextEmailKey ctxKey = "ContextEmailKey"
+	ContextIdKey    ctxKey = "ContextIdKey"
 )
 
-func IsAuthMiddleware(next http.Handler, service *JwtService) http.Handler {
+func IsAuthMiddleware(next http.Handler, service *jwt.JwtService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authorization := r.Header.Get("Authorization")
 
