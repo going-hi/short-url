@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"encoding/json"
 	"net/http"
 	"short-url/config"
 	"short-url/pkg/utils"
@@ -10,10 +9,12 @@ import (
 type AuthHandlerParams struct {
 	*config.Config
 	*AuthRepository
+	*JwtService
 }
 
 type AuthController struct {
 	Repository *AuthRepository
+	JwtService *JwtService
 }
 
 func NewAuthHandler(router *http.ServeMux, params AuthHandlerParams) {
@@ -22,57 +23,43 @@ func NewAuthHandler(router *http.ServeMux, params AuthHandlerParams) {
 		Repository: params.AuthRepository,
 	}
 
+	// router.Handle("POST /auth/login", IsAuthMiddleware(http.HandlerFunc(controller.login), params.JwtService))
 	router.HandleFunc("POST /auth/login", controller.login)
 	router.HandleFunc("POST /auth/register", controller.register)
-	router.HandleFunc("GET /auth/logout", controller.logout)
-}
-
-func sendJson(w http.ResponseWriter, statusCode int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(data)
+	// router.HandleFunc("GET /auth/logout", controller.logout)
 }
 
 func (handler *AuthController) login(w http.ResponseWriter, r *http.Request) {
-	var payload LoginRequest
-
-	err := json.NewDecoder(r.Body).Decode(&payload)
+	payload, err := utils.GetBody[LoginRequest](r.Body)
 
 	if err != nil {
-		sendJson(w, 400, err.Error())
-		return
-	}
-
-	err = utils.IsValid(payload)
-
-	if err != nil {
-		sendJson(w, 400, err.Error())
+		utils.SendJson(w, 400, err.Error())
 		return
 	}
 
 	userData, err := handler.Repository.FindByEmail(payload.Email)
 
 	if err != nil {
-		sendJson(w, 400, err.Error())
+		utils.SendJson(w, 400, err.Error())
 		return
 	}
 
 	if userData == nil {
-		sendJson(w, 400, "Пользователя с таким email не существует")
+		utils.SendJson(w, 400, "Пользователя с таким email не существует")
 		return
 	}
 
 	isMatch := handler.Repository.CheckPassword(payload.Password, userData.Password)
 
 	if !isMatch {
-		sendJson(w, 400, "Неправильный логин или пароль")
+		utils.SendJson(w, 400, "Неправильный логин или пароль")
 		return
 	}
 
-	jwtToken, err := handler.Repository.GenerateJwt(userData)
+	jwtToken, err := handler.JwtService.GenerateJwt(userData)
 
 	if err != nil {
-		sendJson(w, 400, err.Error())
+		utils.SendJson(w, 400, err.Error())
 		return
 	}
 
@@ -80,11 +67,55 @@ func (handler *AuthController) login(w http.ResponseWriter, r *http.Request) {
 		AccessToken: jwtToken,
 	}
 
-	sendJson(w, 200, response)
+	utils.SendJson(w, 200, response)
 }
 
 func (handler *AuthController) register(w http.ResponseWriter, r *http.Request) {
+	payload, err := utils.GetBody[RegisterRequest](r.Body)
 
+	if err != nil {
+		utils.SendJson(w, 400, err.Error())
+		return
+	}
+
+	userData, err := handler.Repository.FindByEmail(payload.Email)
+
+	if err != nil {
+		utils.SendJson(w, 400, err.Error())
+		return
+	}
+
+	if userData != nil {
+		utils.SendJson(w, 400, "Пользователь с такой почтой уже существует")
+		return
+	}
+
+	hashPassword, err := handler.Repository.HashPassword(payload.Password)
+
+	if err != nil {
+		utils.SendJson(w, 400, err.Error())
+		return
+	}
+
+	user, err := handler.Repository.Create(payload.Email, hashPassword)
+
+	if err != nil {
+		utils.SendJson(w, 400, err.Error())
+		return
+	}
+
+	token, err := handler.JwtService.GenerateJwt(user)
+
+	if err != nil {
+		utils.SendJson(w, 400, err.Error())
+		return
+	}
+
+	response := RegisterResponse{
+		AccessToken: token,
+	}
+
+	utils.SendJson(w, 200, response)
 }
 
 func (handler *AuthController) logout(w http.ResponseWriter, r *http.Request) {
