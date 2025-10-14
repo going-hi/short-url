@@ -2,34 +2,39 @@ package auth
 
 import (
 	"net/http"
-	"short-url/config"
+	"short-url/internal/user"
+	"short-url/pkg/jwt"
 	"short-url/pkg/utils"
 )
 
 type AuthHandlerParams struct {
-	*config.Config
-	*AuthRepository
-	*JwtService
+	*user.UserRepository
+	*jwt.JwtService
 }
 
 type AuthController struct {
-	Repository *AuthRepository
-	JwtService *JwtService
+	Service *AuthService
+	JwtService *jwt.JwtService
+	UserRepository *user.UserRepository
 }
 
 func NewAuthHandler(router *http.ServeMux, params AuthHandlerParams) {
+	service := &AuthService{}
 
 	controller := &AuthController{
-		Repository: params.AuthRepository,
+		Service: service,
+		JwtService: params.JwtService,
+		UserRepository: params.UserRepository,
 	}
 
-	// router.Handle("POST /auth/login", IsAuthMiddleware(http.HandlerFunc(controller.login), params.JwtService))
 	router.HandleFunc("POST /auth/login", controller.login)
 	router.HandleFunc("POST /auth/register", controller.register)
+
+	// router.Handle("POST /auth/login", IsAuthMiddleware(http.HandlerFunc(controller.login), params.JwtService))
 	// router.HandleFunc("GET /auth/logout", controller.logout)
 }
 
-func (handler *AuthController) login(w http.ResponseWriter, r *http.Request) {
+func (controller *AuthController) login(w http.ResponseWriter, r *http.Request) {
 	payload, err := utils.GetBody[LoginRequest](r.Body)
 
 	if err != nil {
@@ -37,7 +42,7 @@ func (handler *AuthController) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userData, err := handler.Repository.FindByEmail(payload.Email)
+	userData, err := controller.UserRepository.FindByEmail(payload.Email)
 
 	if err != nil {
 		utils.SendJson(w, 400, err.Error())
@@ -49,14 +54,14 @@ func (handler *AuthController) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	isMatch := handler.Repository.CheckPassword(payload.Password, userData.Password)
+	isMatch := controller.Service.CheckPassword(payload.Password, userData.Password)
 
 	if !isMatch {
 		utils.SendJson(w, 400, "Неправильный логин или пароль")
 		return
 	}
 
-	jwtToken, err := handler.JwtService.GenerateJwt(userData)
+	jwtToken, err := controller.JwtService.GenerateJwt(userData)
 
 	if err != nil {
 		utils.SendJson(w, 400, err.Error())
@@ -70,7 +75,7 @@ func (handler *AuthController) login(w http.ResponseWriter, r *http.Request) {
 	utils.SendJson(w, 200, response)
 }
 
-func (handler *AuthController) register(w http.ResponseWriter, r *http.Request) {
+func (controller *AuthController) register(w http.ResponseWriter, r *http.Request) {
 	payload, err := utils.GetBody[RegisterRequest](r.Body)
 
 	if err != nil {
@@ -78,7 +83,7 @@ func (handler *AuthController) register(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	userData, err := handler.Repository.FindByEmail(payload.Email)
+	userData, err := controller.UserRepository.FindByEmail(payload.Email)
 
 	if err != nil {
 		utils.SendJson(w, 400, err.Error())
@@ -90,21 +95,21 @@ func (handler *AuthController) register(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	hashPassword, err := handler.Repository.HashPassword(payload.Password)
+	hashPassword, err := controller.Service.HashPassword(payload.Password)
 
 	if err != nil {
 		utils.SendJson(w, 400, err.Error())
 		return
 	}
 
-	user, err := handler.Repository.Create(payload.Email, hashPassword)
+	user, err := controller.UserRepository.Create(payload.Email, hashPassword)
 
 	if err != nil {
 		utils.SendJson(w, 400, err.Error())
 		return
 	}
 
-	token, err := handler.JwtService.GenerateJwt(user)
+	token, err := controller.JwtService.GenerateJwt(user)
 
 	if err != nil {
 		utils.SendJson(w, 400, err.Error())
@@ -116,12 +121,4 @@ func (handler *AuthController) register(w http.ResponseWriter, r *http.Request) 
 	}
 
 	utils.SendJson(w, 200, response)
-}
-
-func (handler *AuthController) logout(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func (handler *AuthController) refresh(w http.ResponseWriter, r *http.Request) {
-
 }
