@@ -3,8 +3,10 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"short-url/config"
 	_ "github.com/lib/pq"
+	"net/http"
+	"short-url/config"
+	"short-url/internal/auth"
 )
 
 func main() {
@@ -29,6 +31,15 @@ func main() {
 	}
 
 	fmt.Println("Successfully connected!")
+
+	authRepository := &auth.AuthRepository{Db: db}
+
+	router := http.NewServeMux()
+
+	auth.NewAuthHandler(router, auth.AuthHandlerParams{
+		Config: config,
+		AuthRepository: authRepository,
+	})
 }
 
 // api
