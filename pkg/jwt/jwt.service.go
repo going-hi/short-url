@@ -6,6 +6,12 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+func NewJwtService(secretKey string) *JwtService {
+	return &JwtService{
+		SecretKey: secretKey,
+	}
+}
+
 type JwtService struct {
 	SecretKey string
 }

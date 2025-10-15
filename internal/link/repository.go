@@ -8,6 +8,12 @@ type LinkRepository struct {
 	Db *sql.DB
 }
 
+func NewLinkRepository(db *sql.DB) *LinkRepository {
+	return &LinkRepository{
+		Db: db,
+	}
+}
+
 func (rep *LinkRepository) Create(url, code string, userId int) (*Link, error) {
 	query := `INSERT INTO (url, code, userId) VALUES ($1, $2, $3) RETURNING id, url, code`
 

@@ -6,6 +6,10 @@ import (
 
 type AuthService struct {}
 
+func NewAuthService() *AuthService {
+	return &AuthService{}
+}
+
 // From docs bcrypt
 func (r *AuthService) CheckPassword(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))

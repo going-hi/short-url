@@ -4,9 +4,14 @@ import (
 	"database/sql"
 )
 
-
 type UserRepository struct {
 	Db *sql.DB
+}
+
+func NewUserRepository(db *sql.DB) *UserRepository {
+	return &UserRepository{
+		Db: db,
+	}
 }
 
 func (r *UserRepository) FindByEmail(email string) (*User, error) {
