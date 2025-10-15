@@ -13,6 +13,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// также можно вынести в одельный файл инизиализацию di и сделать компактнее майн также можно убрать дублирование кода
 func main() {
 	config := config.LoadConfig()
 	db, err := database.Connect(config.Db)
@@ -61,8 +62,7 @@ func main() {
 
 	fmt.Println("Server is listening on port " + config.AppPort)
 
-	
 	if err := server.ListenAndServe(); err != nil {
-		fmt.Println("Server error:", err)
+		fmt.Println("Server error:", err) // вместо fmt для сервака лучше использовать log
 	}
 }

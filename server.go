@@ -7,13 +7,13 @@ import (
 )
 
 type Server struct {
-	httpServer  *http.Server 
+	httpServer *http.Server
 }
 
 func (s *Server) Run(port string, handler http.Handler) error {
-	s.httpServer = &http.Server{
-		Addr: ":" + port,
-		Handler: handler,
+	s.httpServer = &http.Server{ // вынести в конфиг
+		Addr:           ":" + port,
+		Handler:        handler,
 		MaxHeaderBytes: 1 << 20, // 1 MB
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,

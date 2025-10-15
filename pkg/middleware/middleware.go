@@ -47,13 +47,18 @@ func IsAuthMiddleware(next http.Handler, service *jwt.JwtService) http.Handler {
 			utils.SendJson(w, 401, "Не валидный токен")
 			return
 		}
-		
+		// Лучше объединить в структуру а не хранить по отдельности
+		// ctx := context.WithValue(r.Context(), "user", struct {
+		//			ID    int
+		//			Email string
+		//	}{ID: jwtData.Id, Email: jwtData.Email})
+		//
 		ctx := context.WithValue(r.Context(), ContextIdKey, jwtData.Id)
 		ctx = context.WithValue(ctx, ContextEmailKey, jwtData.Email)
 		req := r.WithContext(ctx)
 
 		// next
-		next.ServeHTTP(w, req) 
+		next.ServeHTTP(w, req)
 
 		fmt.Println("После запроса")
 	})
