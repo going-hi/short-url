@@ -4,7 +4,6 @@ import (
 	"database/sql"
 )
 
-
 type UserRepository struct {
 	Db *sql.DB
 }
@@ -14,7 +13,7 @@ func (r *UserRepository) FindByEmail(email string) (*User, error) {
 	query := `SELECT id, email, password FROM users WHERE email=$1`
 	err := r.Db.QueryRow(query, email).Scan(
 		u.Id,
-		u.Email,
+		u.Email, // аналогично нужно использовать указатель
 		u.Password,
 	)
 
@@ -37,7 +36,7 @@ func (r *UserRepository) Create(email, hashPassword string) (*User, error) {
 
 	err := r.Db.QueryRow(query, email, hashPassword).Scan(
 		u.Id,
-		u.Email,
+		u.Email, // аналогично нужно использовать указатель
 		u.Password,
 	)
 
