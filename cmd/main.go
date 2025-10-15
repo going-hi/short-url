@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 	"short-url/config"
 	"short-url/internal/auth"
@@ -28,7 +28,7 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println("Successfully connected!")
+	log.Println("Successfully connected!")
 
 	router := http.NewServeMux()
 
@@ -59,10 +59,10 @@ func main() {
 		Handler: router,
 	}
 
-	fmt.Println("Server is listening on port " + config.AppPort)
+	log.Println("Server is listening on port " + config.AppPort)
 
 	
 	if err := server.ListenAndServe(); err != nil {
-		fmt.Println("Server error:", err)
+		log.Println("Server error:", err)
 	}
 }

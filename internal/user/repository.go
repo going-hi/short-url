@@ -36,9 +36,9 @@ func (r *UserRepository) Create(email, hashPassword string) (*User, error) {
 	u := &User{}
 
 	err := r.Db.QueryRow(query, email, hashPassword).Scan(
-		u.Id,
-		u.Email,
-		u.Password,
+		&u.Id,
+		&u.Email,
+		&u.Password,
 	)
 
 	if err != nil {

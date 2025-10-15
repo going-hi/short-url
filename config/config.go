@@ -21,32 +21,25 @@ type Db struct {
 	DbName   string
 }
 
+
+// Можно добавить проверку обязательный параметров
 func LoadConfig() *Config {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
-	dbHost := os.Getenv("DATABASE_HOST")
-	dbPassword := os.Getenv("DATABASE_PASSWORD")
-	dbUser := os.Getenv("DATABASE_USER")
-	dbPort := os.Getenv("DATABASE_PORT")
-	dbName := os.Getenv("DATABASE_NAME")
-
-	appPort := os.Getenv("PORT")
-	secretKey := os.Getenv("SECRET_KEY_JWT")
-
 	dbConfig := Db{
-		Host:     dbHost,
-		Port:     dbPort,
-		User:     dbUser,
-		Password: dbPassword,
-		DbName:   dbName,
+		Host:     os.Getenv("DATABASE_HOST"),
+		Port:     os.Getenv("DATABASE_PORT"),
+		User:     os.Getenv("DATABASE_USER"),
+		Password: os.Getenv("DATABASE_PASSWORD"),
+		DbName:   os.Getenv("DATABASE_NAME"),
 	}
 
 	return &Config{
 		Db:      dbConfig,
-		AppPort: appPort,
-		SecretKey: secretKey,
+		AppPort:  os.Getenv("PORT"),
+		SecretKey: os.Getenv("SECRET_KEY_JWT"),
 	}
 }

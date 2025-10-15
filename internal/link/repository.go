@@ -12,7 +12,7 @@ func (rep *LinkRepository) Create(url, code string, userId int) (*Link, error) {
 	query := `INSERT INTO (url, code, userId) VALUES ($1, $2, $3) RETURNING id, url, code`
 
 	link := &Link{}
-	err := rep.Db.QueryRow(query, url, code, userId).Scan(link.Id, link.Url, link.Code)
+	err := rep.Db.QueryRow(query, url, code, userId).Scan(&link.Id, &link.Url, &link.Code)
 
 	if err != nil {
 		return nil, err
@@ -26,10 +26,10 @@ func (rep *LinkRepository) FindByCode(code string) (*Link, error) {
 
 	link := &Link{}
 	err := rep.Db.QueryRow(query, code).Scan(
-		link.Id,
-		link.Code,
-		link.Url,
-		link.UserId,
+		&link.Id,
+		&link.Code,
+		&link.Url,
+		&link.UserId,
 	)
 
 	if err != nil {
@@ -44,10 +44,10 @@ func (rep *LinkRepository) FindById(id int) (*Link, error) {
 
 	link := &Link{}
 	err := rep.Db.QueryRow(query, id).Scan(
-		link.Id,
-		link.Code,
-		link.Url,
-		link.UserId,
+		&link.Id,
+		&link.Code,
+		&link.Url,
+		&link.UserId,
 	)
 
 	if err != nil {
@@ -86,7 +86,7 @@ func (rep *LinkRepository) FindAllByUserId(userId int) ([]*Link, error) {
 
 	for rows.Next() {
 		l := &Link {}
-		err := rows.Scan(l.Id, l.Code, l.Url, &l.Clicks, &l.UserId)
+		err := rows.Scan(&l.Id, &l.Code, &l.Url, &l.Clicks, &l.UserId)
 		if err != nil {
 			return nil, err
 		}
