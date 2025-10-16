@@ -31,33 +31,33 @@ func (controller *AuthController) login(w http.ResponseWriter, r *http.Request) 
 	payload, err := utils.GetBody[LoginRequest](r.Body)
 
 	if err != nil {
-		utils.SendJson(w, 400, err.Error())
+		utils.SendJson(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	userData, err := controller.UserRepository.FindByEmail(payload.Email)
 
 	if err != nil {
-		utils.SendJson(w, 400, err.Error())
+		utils.SendJson(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if userData == nil {
-		utils.SendJson(w, 400, "Пользователя с таким email не существует")
+		utils.SendJson(w, http.StatusBadRequest, "Пользователя с таким email не существует")
 		return
 	}
 
 	isMatch := controller.Service.CheckPassword(payload.Password, userData.Password)
 
 	if !isMatch {
-		utils.SendJson(w, 400, "Неправильный логин или пароль")
+		utils.SendJson(w, http.StatusBadRequest, "Неправильный логин или пароль")
 		return
 	}
 
 	jwtToken, err := controller.JwtService.GenerateJwt(userData)
 
 	if err != nil {
-		utils.SendJson(w, 400, err.Error())
+		utils.SendJson(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -65,47 +65,47 @@ func (controller *AuthController) login(w http.ResponseWriter, r *http.Request) 
 		AccessToken: jwtToken,
 	}
 
-	utils.SendJson(w, 200, response)
+	utils.SendJson(w,  http.StatusOK, response)
 }
 
 func (controller *AuthController) register(w http.ResponseWriter, r *http.Request) {
 	payload, err := utils.GetBody[RegisterRequest](r.Body)
 
 	if err != nil {
-		utils.SendJson(w, 400, err.Error())
+		utils.SendJson(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	userData, err := controller.UserRepository.FindByEmail(payload.Email)
 
 	if err != nil {
-		utils.SendJson(w, 400, err.Error())
+		utils.SendJson(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if userData != nil {
-		utils.SendJson(w, 400, "Пользователь с такой почтой уже существует")
+		utils.SendJson(w, http.StatusBadRequest, "Пользователь с такой почтой уже существует")
 		return
 	}
 
 	hashPassword, err := controller.Service.HashPassword(payload.Password)
 
 	if err != nil {
-		utils.SendJson(w, 400, err.Error())
+		utils.SendJson(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	user, err := controller.UserRepository.Create(payload.Email, hashPassword)
 
 	if err != nil {
-		utils.SendJson(w, 400, err.Error())
+		utils.SendJson(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	token, err := controller.JwtService.GenerateJwt(user)
 
 	if err != nil {
-		utils.SendJson(w, 400, err.Error())
+		utils.SendJson(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -113,5 +113,5 @@ func (controller *AuthController) register(w http.ResponseWriter, r *http.Reques
 		AccessToken: token,
 	}
 
-	utils.SendJson(w, 200, response)
+	utils.SendJson(w, http.StatusOK, response)
 }
