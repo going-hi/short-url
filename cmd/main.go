@@ -1,15 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
+	"log"
+	"short-url/app"
 	"short-url/config"
-	"short-url/internal/auth"
-	"short-url/internal/link"
-	"short-url/internal/user"
 	"short-url/pkg/database"
-	"short-url/pkg/jwt"
-
 	_ "github.com/lib/pq"
 )
 
@@ -28,41 +23,14 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println("Successfully connected!")
+	log.Println("Successfully connected!")
 
-	router := http.NewServeMux()
 
-	jwtService := &jwt.JwtService{
-		SecretKey: config.SecretKey,
-	}
-
-	userRepository := &user.UserRepository{
-		Db: db,
-	}
-
-	linkRepository := &link.LinkRepository{
-		Db: db,
-	}
-
-	auth.NewAuthHandler(router, auth.AuthHandlerParams{
-		JwtService:     jwtService,
-		UserRepository: userRepository,
-	})
-
-	link.NewLinkHandler(router, link.LinkHandlerParams{
-		Repository: linkRepository,
-		JwtService: jwtService,
-	})
-
-	server := http.Server{
-		Addr:    ":" + config.AppPort,
-		Handler: router,
-	}
-
-	fmt.Println("Server is listening on port " + config.AppPort)
-
+	app := app.NewApp(db, config)
 	
-	if err := server.ListenAndServe(); err != nil {
-		fmt.Println("Server error:", err)
+	if err := app.StartServer(); err != nil {
+		log.Fatalln("Server error:", err.Error())
 	}
+
+	log.Println("Server is listening on port " + config.AppPort)
 }

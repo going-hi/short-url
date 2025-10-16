@@ -14,6 +14,7 @@ type ctxKey string
 const (
 	ContextEmailKey ctxKey = "ContextEmailKey"
 	ContextIdKey    ctxKey = "ContextIdKey"
+	ContextJWTData  ctxKey = "ContextJwtData"
 )
 
 func IsAuthMiddleware(next http.Handler, service *jwt.JwtService) http.Handler {
@@ -47,13 +48,12 @@ func IsAuthMiddleware(next http.Handler, service *jwt.JwtService) http.Handler {
 			utils.SendJson(w, 401, "Не валидный токен")
 			return
 		}
-		
-		ctx := context.WithValue(r.Context(), ContextIdKey, jwtData.Id)
-		ctx = context.WithValue(ctx, ContextEmailKey, jwtData.Email)
+
+		ctx := context.WithValue(r.Context(), ContextJWTData, jwtData)
 		req := r.WithContext(ctx)
 
 		// next
-		next.ServeHTTP(w, req) 
+		next.ServeHTTP(w, req)
 
 		fmt.Println("После запроса")
 	})

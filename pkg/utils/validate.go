@@ -7,8 +7,9 @@ import (
 	"net/http"
 )
 
+var validate = validator.New()
+
 func IsValid(payload any) error {
-	var validate = validator.New()
 	err := validate.Struct(payload)
 	return err
 }
@@ -20,6 +21,9 @@ func SendJson(w http.ResponseWriter, statusCode int, data any) {
 }
 
 func GetBody[T any](body io.ReadCloser) (*T, error) {
+
+	defer body.Close()
+
 	var payload T
 
 	err := json.NewDecoder(body).Decode(&payload)
@@ -33,7 +37,6 @@ func GetBody[T any](body io.ReadCloser) (*T, error) {
 	if err != nil {
 		return nil, err
 	}
-
 
 	return &payload, nil
 }
